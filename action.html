@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Оформление заказа — ТрансБилет</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="index.html" class="logo">
+      <img src="img/logo.svg" alt="Логотип ТрансБилет" width="40" height="40">
+      <span>ТрансБилет</span>
+    </a>
+    <nav class="main-nav" aria-label="Основная навигация">
+      <ul>
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="catalog.html">Рейсы</a></li>
+        <li><a href="item.html">Рейс</a></li>
+        <li><a href="action.html" class="active">Мои билеты</a></li>
+        <li><a href="contacts.html">Контакты</a></li>
+        <li data-auth-slot></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Оформление заказа</h1>
+
+    <section id="order-summary" class="order-summary" aria-label="Состав заказа"></section>
+
+    <form id="order-form" action="#" method="post" novalidate>
+      <fieldset>
+        <legend>Данные получателя</legend>
+        <label for="fio">ФИО</label>
+        <input type="text" id="fio" name="fio" required>
+
+        <label for="phone">Телефон</label>
+        <input type="tel" id="phone" name="phone" placeholder="+7 (900) 000-00-00" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+      </fieldset>
+
+      <fieldset>
+        <legend>Дата поездки</legend>
+        <label for="date">Дата</label>
+        <input type="date" id="date" name="date" required>
+      </fieldset>
+
+      <button type="submit" class="btn">Подтвердить заказ</button>
+    </form>
+
+    <section id="my-tickets" style="margin-top: 24px;"></section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 ТрансБилет. Учебный проект.</p>
+    <p><a href="contacts.html">Контакты</a></p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="ui.js"></script>
+  <script src="auth.js"></script>
+  <script src="action.js"></script>
+</body>
+</html>

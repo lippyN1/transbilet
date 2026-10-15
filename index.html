@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ТрансБилет — покупка билетов на транспорт</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="index.html" class="logo">
+      <img src="img/logo.svg" alt="Логотип ТрансБилет" width="40" height="40">
+      <span>ТрансБилет</span>
+    </a>
+    <nav class="main-nav" aria-label="Основная навигация">
+      <ul>
+        <li><a href="index.html" class="active">Главная</a></li>
+        <li><a href="catalog.html">Рейсы</a></li>
+        <li><a href="item.html">Рейс</a></li>
+        <li><a href="action.html">Мои билеты</a></li>
+        <li><a href="contacts.html">Контакты</a></li>
+        <li data-auth-slot></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <img src="img/hero.svg" alt="Автобус, поезд и самолёт" class="hero-img" width="800" height="400">
+      <div class="hero-text">
+        <h1>Билеты на автобус, поезд и самолёт</h1>
+        <p>Выбирайте рейс, дату и место. Занятые места сразу видны на схеме.</p>
+        <p><a href="catalog.html" class="btn">Найти рейс</a></p>
+      </div>
+    </section>
+
+    <section class="featured">
+      <h2>Популярные направления</h2>
+      <ul class="card-grid">
+        <li class="card">
+          <img src="img/bus.svg" alt="Автобус Москва — Тула" width="400" height="240">
+          <h3>Москва → Тула</h3>
+          <p>Автобус, 3 ч 20 мин, от 650 ₽</p>
+          <a href="item.html?id=1">Подробнее</a>
+        </li>
+        <li class="card">
+          <img src="img/train.svg" alt="Поезд Москва — Санкт-Петербург" width="400" height="240">
+          <h3>Москва → Санкт-Петербург</h3>
+          <p>Поезд, 6 ч 40 мин, от 1 800 ₽</p>
+          <a href="item.html?id=2">Подробнее</a>
+        </li>
+        <li class="card">
+          <img src="img/plane.svg" alt="Самолёт Москва — Казань" width="400" height="240">
+          <h3>Москва → Казань</h3>
+          <p>Самолёт, 1 ч 25 мин, от 3 200 ₽</p>
+          <a href="item.html?id=3">Подробнее</a>
+        </li>
+        <li class="card">
+          <img src="img/bus.svg" alt="Автобус Москва — Ярославль" width="400" height="240">
+          <h3>Москва → Ярославль</h3>
+          <p>Автобус, 4 ч 10 мин, от 800 ₽</p>
+          <a href="item.html?id=4">Подробнее</a>
+        </li>
+        <li class="card">
+          <img src="img/train.svg" alt="Поезд Москва — Нижний Новгород" width="400" height="240">
+          <h3>Москва → Нижний Новгород</h3>
+          <p>Поезд, 3 ч 55 мин, от 1 400 ₽</p>
+          <a href="item.html?id=5">Подробнее</a>
+        </li>
+        <li class="card">
+          <img src="img/plane.svg" alt="Самолёт Москва — Сочи" width="400" height="240">
+          <h3>Москва → Сочи</h3>
+          <p>Самолёт, 2 ч 50 мин, от 4 100 ₽</p>
+          <a href="item.html?id=6">Подробнее</a>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 ТрансБилет. Учебный проект.</p>
+    <p><a href="contacts.html">Контакты</a></p>
+  </footer>
+
+  <script src="ui.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Рейс — ТрансБилет</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="index.html" class="logo">
+      <img src="img/logo.svg" alt="Логотип ТрансБилет" width="40" height="40">
+      <span>ТрансБилет</span>
+    </a>
+    <nav class="main-nav" aria-label="Основная навигация">
+      <ul>
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="catalog.html">Рейсы</a></li>
+        <li><a href="item.html" class="active">Рейс</a></li>
+        <li><a href="action.html">Мои билеты</a></li>
+        <li><a href="contacts.html">Контакты</a></li>
+        <li data-auth-slot></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article class="item-detail">
+      <h1 id="trip-title">Рейс</h1>
+      <img id="trip-image" src="img/bus.svg" alt="Транспорт на маршруте" class="item-img" width="400" height="240">
+
+      <h2>Описание</h2>
+      <p>Ежедневный междугородний рейс. Мягкие сиденья, багажный отсек, билет можно вернуть за 2 часа до отправления.</p>
+
+      <h2>Характеристики</h2>
+      <dl class="specs">
+        <dt>Откуда</dt><dd id="trip-from">—</dd>
+        <dt>Куда</dt><dd id="trip-to">—</dd>
+        <dt>Время в пути</dt><dd id="trip-dur">—</dd>
+        <dt>Цена</dt><dd id="trip-price">—</dd>
+      </dl>
+
+      <h2>Погода в городе прибытия</h2>
+      <div id="weather-box">Загружаем погоду…</div>
+
+      <h2>Автостанция на карте</h2>
+      <div id="map"></div>
+
+      <h2>Схема мест</h2>
+      <p class="note">Серые места заняты, выбрать нельзя.</p>
+      <div id="seat-map" class="seat-map" aria-label="Схема мест"></div>
+      <p id="selected-seat" class="note">Место не выбрано</p>
+
+      <p>
+        <button id="checkout-btn" type="button" class="btn btn--disabled" disabled>
+          Оформить заказ
+        </button>
+      </p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 ТрансБилет. Учебный проект.</p>
+    <p><a href="contacts.html">Контакты</a></p>
+  </footer>
+
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script src="data.js"></script>
+  <script src="ui.js"></script>
+  <script src="auth.js"></script>
+  <script src="item.js"></script>
+</body>
+</html>

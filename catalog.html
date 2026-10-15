@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Рейсы — ТрансБилет</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="index.html" class="logo">
+      <img src="img/logo.svg" alt="Логотип ТрансБилет" width="40" height="40">
+      <span>ТрансБилет</span>
+    </a>
+    <nav class="main-nav" aria-label="Основная навигация">
+      <ul>
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="catalog.html" class="active">Рейсы</a></li>
+        <li><a href="item.html">Рейс</a></li>
+        <li><a href="action.html">Мои билеты</a></li>
+        <li><a href="contacts.html">Контакты</a></li>
+        <li data-auth-slot></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Все рейсы</h1>
+    <p class="note">Фильтры и сортировка работают мгновенно, без перезагрузки.</p>
+
+    <form id="filters-form" class="filters" novalidate>
+      <label>Откуда<input type="text" name="from" placeholder="Город отправления"></label>
+      <label>Куда<input type="text" name="to" placeholder="Город прибытия"></label>
+      <label>Вид транспорта
+        <select name="transport">
+          <option value="">Любой</option>
+          <option value="Автобус">Автобус</option>
+          <option value="Поезд">Поезд</option>
+          <option value="Самолёт">Самолёт</option>
+        </select>
+      </label>
+      <label>Сортировка
+        <select name="sort">
+          <option value="">По умолчанию</option>
+          <option value="price-asc">Цена ↑</option>
+          <option value="price-desc">Цена ↓</option>
+          <option value="time-asc">Время ↑</option>
+        </select>
+      </label>
+      <button type="button" id="filters-reset" class="btn btn-ghost">Сбросить</button>
+    </form>
+
+    <p id="catalog-counter" class="note"></p>
+
+    <div class="table-wrap">
+      <table class="catalog-table">
+        <caption>Расписание рейсов</caption>
+        <thead>
+          <tr>
+            <th>Маршрут</th><th>Транспорт</th><th>Время в пути</th><th>Цена</th><th>Действие</th>
+          </tr>
+        </thead>
+        <tbody id="catalog-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 ТрансБилет. Учебный проект.</p>
+    <p><a href="contacts.html">Контакты</a></p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="ui.js"></script>
+  <script src="auth.js"></script>
+  <script src="catalog.js"></script>
+</body>
+</html>
