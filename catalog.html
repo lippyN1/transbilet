@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="description" content="WayGo — поиск билетов на самолёт, поезд и автобус">
+  <title>Каталог билетов — WayGo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="WayGo — главная"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 17.5 27 5l-7.4 22-4.2-7.6L4 17.5Z" fill="currentColor"/><path d="m15.4 19.4 5.8-7.1-8 5.2" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>way<span class="brand-accent">go</span></span></a>
+    <nav class="main-nav" aria-label="Основная навигация">
+      <a href="/" data-nav="home">Главная</a><a href="/catalog" data-nav="catalog">Билеты</a><a href="/explore" data-nav="explore">Карта и погода</a><a href="/contacts" data-nav="contacts">Контакты</a>
+    </nav>
+    <div class="header-actions"><span class="secure-note"><span class="status-dot"></span> Путешествуй проще</span><a class="button button-small button-outline" href="/auth" id="account-link">Войти <span aria-hidden="true">↗</span></a><button class="menu-toggle" aria-label="Открыть меню" aria-expanded="false">☰</button></div>
+  </div>
+</header>
+<main id="main">
+<section class="page-hero"><div class="container"><div class="eyebrow">КАТАЛОГ МАРШРУТОВ</div><h1>Найди свой <span class="gradient-text">путь.</span></h1><p>Сравнивай варианты и выбирай тот, что подходит именно тебе.</p><div class="breadcrumbs"><a href="/">Главная</a><span>/</span><span>Билеты</span></div></div></section>
+<section class="container catalog-layout">
+ <aside class="filter-panel"><div class="filter-title"><h2>Фильтры</h2><button type="button" class="reset-button" id="reset-filters">Сбросить</button></div>
+  <label class="control-label" for="filter-origin">Откуда</label><input class="text-input" id="filter-origin" placeholder="Любой город">
+  <label class="control-label" for="filter-destination">Куда</label><input class="text-input" id="filter-destination" placeholder="Любой город">
+  <label class="control-label" for="filter-transport">Транспорт</label><select class="text-input" id="filter-transport"><option>Все виды</option><option>Самолёт</option><option>Поезд</option><option>Автобус</option></select>
+  <label class="control-label" for="sort-trips">Сортировка</label><select class="text-input" id="sort-trips"><option value="price_desc" selected>Сначала дороже</option><option value="price">Сначала дешевле</option><option value="duration">По длительности</option><option value="recommended">Рекомендуемые</option></select>
+  <div class="filter-note"><span>✦</span><p>Подсказка: попробуй фильтр по виду транспорта, чтобы быстрее найти подходящий вариант.</p></div>
+ </aside>
+ <div class="results-column"><div class="results-toolbar"><div><h2>Доступные маршруты</h2><p id="results-count">Загружаем варианты…</p></div><span class="sort-badge">Обновлено для демо</span></div><div id="trip-list" class="trip-list" aria-live="polite"><div class="loading-card">Подбираем маршруты…</div></div></div>
+</section>
+</main><footer class="site-footer"><div class="footer-inner"><a class="brand brand-footer" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 17.5 27 5l-7.4 22-4.2-7.6L4 17.5Z" fill="currentColor"/></svg></span><span>way<span class="brand-accent">go</span></span></a><p>Больше маршрутов. Меньше хлопот.</p><div class="footer-links"><a href="/catalog">Найти билет</a><a href="/contacts">Поддержка</a><a href="/auth">Аккаунт</a></div><small>Учебный проект · Демонстрационные рейсы и цены</small></div></footer>
+</body></html>

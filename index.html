@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="description" content="WayGo — поиск билетов на самолёт, поезд и автобус">
+  <title>Путешествия начинаются здесь — WayGo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="WayGo — главная"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 17.5 27 5l-7.4 22-4.2-7.6L4 17.5Z" fill="currentColor"/><path d="m15.4 19.4 5.8-7.1-8 5.2" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>way<span class="brand-accent">go</span></span></a>
+    <nav class="main-nav" aria-label="Основная навигация">
+      <a href="/" data-nav="home">Главная</a><a href="/catalog" data-nav="catalog">Билеты</a><a href="/explore" data-nav="explore">Карта и погода</a><a href="/contacts" data-nav="contacts">Контакты</a>
+    </nav>
+    <div class="header-actions"><span class="secure-note"><span class="status-dot"></span> Путешествуй проще</span><a class="button button-small button-outline" href="/auth" id="account-link">Войти <span aria-hidden="true">↗</span></a><button class="menu-toggle" aria-label="Открыть меню" aria-expanded="false">☰</button></div>
+  </div>
+</header>
+<main id="main">
+<section class="hero-section">
+ <div class="hero-bg-orb orb-one"></div><div class="hero-bg-orb orb-two"></div>
+ <div class="container hero-layout">
+  <div class="hero-copy"><div class="eyebrow"><span class="eyebrow-icon">✦</span> ТВОЙ МАРШРУТ НАЧИНАЕТСЯ ЗДЕСЬ</div>
+   <h1>Мир ближе,<br><span class="gradient-text">чем кажется.</span></h1>
+   <p class="hero-lead">Находи билеты на самолёт, поезд и автобус — выбирай удобный маршрут и отправляйся навстречу новому.</p>
+   <div class="hero-proof"><span class="proof-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 14.6 9l5.9.8-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.8L12 3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m9.2 12.3 1.8 1.8 3.8-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>12+ направлений</b><br><small>для твоих следующих историй</small></span><span class="proof-divider"></span><span class="proof-star">✦</span><span><b>Простой поиск</b><br><small>без лишних шагов</small></span></div>
+  </div>
+  <div class="hero-art" aria-label="Иллюстрация путешествия"><div class="art-sun"></div><div class="art-cloud cloud-a"></div><div class="art-cloud cloud-b"></div><div class="art-route route-a"></div><div class="art-plane">✈</div><div class="art-card"><span class="art-card-icon">↗</span><span class="art-card-label">ТВОЁ СЛЕДУЮЩЕЕ ПРИКЛЮЧЕНИЕ</span><strong>Уже близко</strong><small>Осталось выбрать маршрут</small></div><div class="art-stamp">GO<br><span>ANYWHERE</span></div><div class="art-hill hill-back"></div><div class="art-hill hill-front"></div></div>
+ </div>
+</section>
+<section class="search-wrap container" aria-label="Поиск билетов">
+ <form class="search-panel" id="home-search">
+  <div class="search-field"><label for="origin">Откуда</label><div class="field-with-icon"><span>⌖</span><input id="origin" name="origin" placeholder="Город отправления" autocomplete="off"></div></div>
+  <button type="button" class="swap-button" id="swap-cities" aria-label="Поменять города местами">⇄</button>
+  <div class="search-field"><label for="destination">Куда</label><div class="field-with-icon"><span>⌖</span><input id="destination" name="destination" placeholder="Город назначения" autocomplete="off"></div></div>
+  <div class="search-field date-field"><label for="travel-date">Когда</label><div class="field-with-icon"><span>▦</span><input id="travel-date" name="date" type="date" value="2026-11-04"></div></div>
+  <button class="button button-primary search-submit" type="submit"><span>Найти билеты</span><span aria-hidden="true">↗</span></button>
+ </form>
+ <p class="search-hint"><span>✦</span> Умный поиск по направлениям и видам транспорта</p>
+</section>
+<section class="section container">
+ <div class="section-heading"><div><div class="eyebrow">ИДЕИ ДЛЯ ПОЕЗДКИ</div><h2>Куда отправимся?</h2><p>Популярные маршруты, с которых можно начать.</p></div><a class="text-link" href="/catalog">Все направления <span>→</span></a></div>
+ <div class="destination-grid" id="featured-trips">
+  <article class="destination-card destination-large"><div class="destination-visual visual-petersburg"><span class="visual-label">КУЛЬТУРА И АТМОСФЕРА</span></div><div class="destination-info"><div><h3>Москва <span>→</span> Санкт-Петербург</h3><p>Город белых ночей</p></div><span class="price-tag">от 2 790 ₽</span></div><a class="card-hit" href="/catalog?origin=Москва&destination=Санкт-Петербург" aria-label="Билеты из Москвы в Санкт-Петербург"></a></article>
+  <article class="destination-card"><div class="destination-visual visual-kazan"><span class="visual-label">ВКУС ТРАДИЦИЙ</span></div><div class="destination-info"><div><h3>Москва <span>→</span> Казань</h3><p>Восток встречает запад</p></div><span class="price-tag">от 4 290 ₽</span></div><a class="card-hit" href="/catalog?origin=Москва&destination=Казань" aria-label="Билеты из Москвы в Казань"></a></article>
+  <article class="destination-card"><div class="destination-visual visual-sochi"><span class="visual-label">МОРЕ РЯДОМ</span></div><div class="destination-info"><div><h3>Москва <span>→</span> Сочи</h3><p>Поймай солнечное настроение</p></div><span class="price-tag">от 7 290 ₽</span></div><a class="card-hit" href="/catalog?origin=Москва&destination=Сочи" aria-label="Билеты из Москвы в Сочи"></a></article>
+ </div>
+</section>
+<section class="feature-band"><div class="container feature-inner"><div><div class="eyebrow">ПОЧЕМУ WAYGO</div><h2>Планировать —<br>тоже удовольствие.</h2></div><div class="feature-item"><span class="feature-icon icon-lilac">⌕</span><h3>Всё в одном поиске</h3><p>Сравнивай разные виды транспорта в одном каталоге.</p></div><div class="feature-item"><span class="feature-icon icon-peach">♡</span><h3>Выбирай спокойно</h3><p>Понятные условия, цены и информация о маршруте.</p></div><div class="feature-item"><span class="feature-icon icon-mint">↗</span><h3>Бронируй онлайн</h3><p>Создавай учебные бронирования и следи за билетами.</p></div></div></section>
+<section class="section container bottom-cta"><div><div class="eyebrow">ТВОЯ ИСТОРИЯ ЖДЁТ</div><h2>Следующая остановка — <span class="gradient-text">новые впечатления.</span></h2></div><a href="/catalog" class="button button-primary">Выбрать маршрут <span>→</span></a></section>
+</main><footer class="site-footer"><div class="footer-inner"><a class="brand brand-footer" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 17.5 27 5l-7.4 22-4.2-7.6L4 17.5Z" fill="currentColor"/></svg></span><span>way<span class="brand-accent">go</span></span></a><p>Больше маршрутов. Меньше хлопот.</p><div class="footer-links"><a href="/catalog">Найти билет</a><a href="/contacts">Поддержка</a><a href="/auth">Аккаунт</a></div><small>Учебный проект · Демонстрационные рейсы и цены</small></div></footer>
+</body></html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="description" content="WayGo — поиск билетов на самолёт, поезд и автобус">
+  <title>Информация о маршруте — WayGo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="WayGo — главная"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 17.5 27 5l-7.4 22-4.2-7.6L4 17.5Z" fill="currentColor"/><path d="m15.4 19.4 5.8-7.1-8 5.2" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>way<span class="brand-accent">go</span></span></a>
+    <nav class="main-nav" aria-label="Основная навигация">
+      <a href="/" data-nav="home">Главная</a><a href="/catalog" data-nav="catalog">Билеты</a><a href="/explore" data-nav="explore">Карта и погода</a><a href="/contacts" data-nav="contacts">Контакты</a>
+    </nav>
+    <div class="header-actions"><span class="secure-note"><span class="status-dot"></span> Путешествуй проще</span><a class="button button-small button-outline" href="/auth" id="account-link">Войти <span aria-hidden="true">↗</span></a><button class="menu-toggle" aria-label="Открыть меню" aria-expanded="false">☰</button></div>
+  </div>
+</header>
+<main id="main">
+<section class="page-hero compact-hero"><div class="container"><div class="breadcrumbs"><a href="/">Главная</a><span>/</span><a href="/catalog">Билеты</a><span>/</span><span>Маршрут</span></div><div class="eyebrow">ИНФОРМАЦИЯ О ПОЕЗДКЕ</div><h1>Твой маршрут — <span class="gradient-text">в деталях.</span></h1><p>Проверь время, перевозчика и стоимость перед выбором места.</p></div></section>
+<section class="container detail-layout"><div id="ticket-detail" class="detail-main"><div class="loading-card">Загружаем маршрут…</div></div><aside class="detail-aside"><div class="aside-card"><span class="aside-icon">✦</span><h3>Путешествуй с комфортом</h3><p>Перед бронированием проверь дату, маршрут и данные пассажира.</p><ul class="check-list"><li>Понятная стоимость</li><li>Выбор места онлайн</li><li>Билет в личном кабинете</li></ul><small>Демонстрационный сервис: оплата не выполняется.</small></div></aside></section>
+</main><footer class="site-footer"><div class="footer-inner"><a class="brand brand-footer" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 17.5 27 5l-7.4 22-4.2-7.6L4 17.5Z" fill="currentColor"/></svg></span><span>way<span class="brand-accent">go</span></span></a><p>Больше маршрутов. Меньше хлопот.</p><div class="footer-links"><a href="/catalog">Найти билет</a><a href="/contacts">Поддержка</a><a href="/auth">Аккаунт</a></div><small>Учебный проект · Демонстрационные рейсы и цены</small></div></footer>
+</body></html>

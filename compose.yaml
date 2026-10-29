@@ -1,0 +1,13 @@
+services:
+  waygo:
+    build: .
+    container_name: waygo
+    ports:
+      - "8000:8000"
+    environment:
+      WAYGO_DB: /data/waygo.db
+    volumes:
+      - waygo_data:/data
+    restart: unless-stopped
+volumes:
+  waygo_data:

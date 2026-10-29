@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="description" content="WayGo — поиск билетов на самолёт, поезд и автобус">
+  <title>Бронирование — WayGo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="WayGo — главная"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 17.5 27 5l-7.4 22-4.2-7.6L4 17.5Z" fill="currentColor"/><path d="m15.4 19.4 5.8-7.1-8 5.2" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>way<span class="brand-accent">go</span></span></a>
+    <nav class="main-nav" aria-label="Основная навигация">
+      <a href="/" data-nav="home">Главная</a><a href="/catalog" data-nav="catalog">Билеты</a><a href="/explore" data-nav="explore">Карта и погода</a><a href="/contacts" data-nav="contacts">Контакты</a>
+    </nav>
+    <div class="header-actions"><span class="secure-note"><span class="status-dot"></span> Путешествуй проще</span><a class="button button-small button-outline" href="/auth" id="account-link">Войти <span aria-hidden="true">↗</span></a><button class="menu-toggle" aria-label="Открыть меню" aria-expanded="false">☰</button></div>
+  </div>
+</header>
+<main id="main">
+<section class="page-hero compact-hero"><div class="container"><div class="eyebrow">ОФОРМЛЕНИЕ ПОЕЗДКИ</div><h1>Выбери место и <span class="gradient-text">отправляйся.</span></h1><p>Выбери маршрут, свободное место и укажи данные пассажира.</p><div class="breadcrumbs"><a href="/">Главная</a><span>/</span><a href="/catalog">Билеты</a><span>/</span><span>Бронирование</span></div></div></section>
+<section class="container booking-layout"><div class="booking-main"><div class="content-card"><div class="card-heading"><div><div class="eyebrow">ШАГ 1 ИЗ 2</div><h2>Выбери место</h2><p id="booking-route-hint">Сначала выбери маршрут в каталоге.</p></div><span class="seat-legend"><i></i> Свободно <i class="occupied-dot"></i> Занято</span></div><div id="seat-map" class="seat-map"><div class="seat-empty-state">
+  <span class="seat-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 8h3v3H8zM13 8h3M13 11h3M8 14h3v3H8zM13 14h3M13 17h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  <h3>Сначала выбери маршрут</h3>
+  <p>Открой подходящий рейс в каталоге — после этого здесь появится схема салона со свободными местами.</p>
+  <a class="button button-primary" href="/catalog">Найти маршрут <span aria-hidden="true">→</span></a>
+</div></div><div class="seat-footnote">Схема условная. Место фиксируется после подтверждения бронирования.</div></div>
+ <div class="content-card passenger-card"><div class="eyebrow">ШАГ 2 ИЗ 2</div><h2>Данные пассажира</h2><form id="booking-form" class="stack-form"><label for="passenger-name">Имя и фамилия пассажира</label><input id="passenger-name" class="text-input" required minlength="2" placeholder="Например, Анна Смирнова"><div class="booking-summary"><div><span>Выбранное место</span><strong id="selected-seat">Не выбрано</strong></div><div><span>Стоимость</span><strong id="selected-price">—</strong></div></div><button class="button button-primary button-wide" type="submit">Подтвердить бронирование <span>→</span></button><p class="form-footnote">Для бронирования нужно войти в аккаунт. Оплата в учебной версии не производится.</p><p class="form-message" id="booking-message" aria-live="polite"></p></form></div></div>
+ <aside class="booking-aside"><div class="aside-card booking-help-card"><span class="aside-icon">✦</span><h3>Всё готово к поездке?</h3><p>Перед отправлением проверь город прибытия, погоду и карту — так проще спланировать дорогу от вокзала или аэропорта.</p><a class="button button-primary button-wide" href="/explore">Открыть карту и погоду <span>→</span></a></div><section class="content-card weather-card" id="booking-weather-card"><div class="eyebrow">ПУНКТ ПРИБЫТИЯ</div><h2 id="booking-weather-title">Погода в городе прибытия</h2><p id="booking-weather-summary" class="muted">Выбери маршрут, чтобы посмотреть актуальный прогноз.</p><a class="text-link" href="/explore">Подробный прогноз и карта →</a></section></aside>
+</section>
+</main><footer class="site-footer"><div class="footer-inner"><a class="brand brand-footer" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 17.5 27 5l-7.4 22-4.2-7.6L4 17.5Z" fill="currentColor"/></svg></span><span>way<span class="brand-accent">go</span></span></a><p>Больше маршрутов. Меньше хлопот.</p><div class="footer-links"><a href="/catalog">Найти билет</a><a href="/contacts">Поддержка</a><a href="/auth">Аккаунт</a></div><small>Учебный проект · Демонстрационные рейсы и цены</small></div></footer>
+</body></html>
