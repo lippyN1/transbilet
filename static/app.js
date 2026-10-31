@@ -14,15 +14,17 @@ async function api(url, options={}) {
 }
 function message(el, text, type="") { if(!el) return; el.textContent=text; el.className="form-message"+(type?" "+type:""); }
 function weatherDescription(code){const c=Number(code);if(c===0)return "Ясно";if([1,2,3].includes(c))return "Переменная облачность";if([45,48].includes(c))return "Туман";if([51,53,55,56,57].includes(c))return "Морось";if([61,63,65,66,67,80,81,82].includes(c))return "Дождь";if([71,73,75,77,85,86].includes(c))return "Снег";if([95,96,99].includes(c))return "Гроза";return "Погодные условия";}
-async function getPlaceWeather(city){const gr=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ru&format=json`);if(!gr.ok)throw new Error("Не удалось найти город");const gd=await gr.json();const place=gd.results?.[0];if(!place)throw new Error("Город не найден. Проверь название и попробуй ещё раз.");const wr=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto`);if(!wr.ok)throw new Error("Прогноз временно недоступен");const wd=await wr.json();if(!wd.current)throw new Error("Нет данных о текущей погоде");return {place,weather:wd.current};}
+async function getPlaceWeather(city){return api(`/api/weather?city=${encodeURIComponent(city)}`);}
 function weatherMarkup(data){const w=data.weather;const icon=Number(w.weather_code)===0?"☀":Number(w.weather_code)>=71?"❄":Number(w.weather_code)>=61?"🌧":"☁";return `<div class="weather-icon" aria-hidden="true">${icon}</div><div class="weather-details"><div class="weather-place">${esc(data.place.name)}${data.place.country?`, ${esc(data.place.country)}`:""}</div><div class="weather-temperature">${Math.round(w.temperature_2m)}°C</div><h3>${weatherDescription(w.weather_code)}</h3><p>Ощущается как ${Math.round(w.apparent_temperature)}°C · Ветер ${Math.round(w.wind_speed_10m)} км/ч · Влажность ${Math.round(w.relative_humidity_2m)}%</p></div>`;}
-async function renderWeatherMap(city,{weatherHost,mapTitle,summary,openLink,mapId="destination-map"}={}){const data=await getPlaceWeather(city);if(weatherHost)weatherHost.innerHTML=weatherMarkup(data);if(summary)summary.textContent=`${Math.round(data.weather.temperature_2m)}°C · ${weatherDescription(data.weather.weather_code)} · ветер ${Math.round(data.weather.wind_speed_10m)} км/ч`;if(mapTitle)mapTitle.textContent=`${data.place.name} на карте`;const url=`https://www.openstreetmap.org/?mlat=${data.place.latitude}&mlon=${data.place.longitude}#map=12/${data.place.latitude}/${data.place.longitude}`;if(openLink)openLink.href=url;const mapEl=document.getElementById(mapId);if(mapEl&&window.L){if(mapEl._waygoMap){mapEl._waygoMap.remove();mapEl._waygoMap=null;}const map=L.map(mapEl).setView([data.place.latitude,data.place.longitude],11);mapEl._waygoMap=map;L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);L.marker([data.place.latitude,data.place.longitude]).addTo(map).bindPopup(`<strong>${esc(data.place.name)}</strong><br>${Math.round(data.weather.temperature_2m)}°C · ${weatherDescription(data.weather.weather_code)}`).openPopup();setTimeout(()=>map.invalidateSize(),120);}return data;}
+async function renderWeatherMap(city,{weatherHost,mapTitle,summary,openLink,mapId="destination-map"}={}){const data=await getPlaceWeather(city);if(weatherHost)weatherHost.innerHTML=weatherMarkup(data);if(summary)summary.textContent=`${Math.round(data.weather.temperature_2m)}°C · ${weatherDescription(data.weather.weather_code)} · ветер ${Math.round(data.weather.wind_speed_10m)} км/ч`;if(mapTitle)mapTitle.textContent=`${data.place.name} на карте`;const mapData=await api(`/api/map?city=${encodeURIComponent(city)}`);if(openLink)openLink.href=mapData.open_url;const mapEl=document.getElementById(mapId);if(mapEl){mapEl.innerHTML=`<iframe title="Карта города ${esc(data.place.name)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${esc(mapData.embed_url)}" allowfullscreen></iframe>`;}return data;}
 async function exploreInit(){const form=$("#explore-form");if(!form)return;const input=$("#explore-city"),host=$("#explore-weather"),status=$("#explore-status");const params=new URLSearchParams(location.search);if(params.get("city"))input.value=params.get("city");const run=async()=>{host.innerHTML='<div class="weather-loading">Загружаем погоду и карту…</div>';message(status,"");try{const d=await renderWeatherMap(input.value.trim(),{weatherHost:host,mapTitle:$("#explore-map-title"),openLink:$("#open-osm")});$("#explore-location-note").textContent=`Координаты: ${d.place.latitude.toFixed(3)}, ${d.place.longitude.toFixed(3)}. Погодные данные обновляются внешним сервисом.`;}catch(e){host.innerHTML=`<p class="empty-state">${esc(e.message)}</p>`;message(status,e.message,"error");}};form.addEventListener("submit",e=>{e.preventDefault();run();});run();}
 function activeNav(){
  const path=location.pathname==="/"?"home":location.pathname.slice(1);
  $$("[data-nav]").forEach(a=>{if(a.dataset.nav===path)a.classList.add("active")});
  const token=localStorage.getItem(tokenKey), link=$("#account-link");
- if(link && token){link.textContent="Аккаунт";link.href="/auth";}
+ // A saved token means the user already has a session: send them to bookings,
+ // not back to the login/registration screen on every page.
+ if(link && token){link.textContent="Мой аккаунт";link.href="/account";}
 }
 function mobileNav(){
  const toggle=$(".menu-toggle"), nav=$(".main-nav");
@@ -111,10 +113,47 @@ async function renderBookings(){
 }
 function authInit(){
  const tabs=$$(".auth-tab");if(!tabs.length)return;
+ // Reuse a valid session after navigating between pages. If it has expired,
+ // discard only that stale token and leave the user on the login tab.
+ const savedToken=localStorage.getItem(tokenKey);
+ if(savedToken){
+  api("/api/auth/me").then(()=>{location.replace("/account")}).catch(()=>{localStorage.removeItem(tokenKey)});
+ }
  tabs.forEach(tab=>tab.addEventListener("click",()=>{tabs.forEach(t=>{t.classList.toggle("is-active",t===tab);t.setAttribute("aria-selected",String(t===tab))});const reg=tab.dataset.mode==="register";const login=$("#login-panel"),register=$("#register-panel");login.hidden=reg;register.hidden=!reg;const active=reg?register:login;active.classList.remove("panel-replay");void active.offsetWidth;active.classList.add("panel-replay");}));
- $("#login-form")?.addEventListener("submit",async e=>{e.preventDefault();const status=$("#login-status");try{const data=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("#login-email").value.trim(),password:$("#login-password").value})});localStorage.setItem(tokenKey,data.token);message(status,"Вход выполнен. Перенаправляем…","success");setTimeout(()=>location.href="/booking",600)}catch(err){message(status,err.message,"error")}});
- $("#register-form")?.addEventListener("submit",async e=>{e.preventDefault();const status=$("#register-status");try{const data=await api("/api/auth/register",{method:"POST",body:JSON.stringify({name:$("#register-name").value.trim(),email:$("#register-email").value.trim(),password:$("#register-password").value})});localStorage.setItem(tokenKey,data.token);message(status,"Аккаунт создан. Перенаправляем…","success");setTimeout(()=>location.href="/booking",600)}catch(err){message(status,err.message,"error")}});
+ $("#login-form")?.addEventListener("submit",async e=>{e.preventDefault();const status=$("#login-status");try{const data=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("#login-email").value.trim(),password:$("#login-password").value})});localStorage.setItem(tokenKey,data.token);message(status,"Вход выполнен. Перенаправляем…","success");setTimeout(()=>location.href="/account",350)}catch(err){message(status,err.message,"error")}});
+ $("#register-form")?.addEventListener("submit",async e=>{e.preventDefault();const status=$("#register-status");try{const data=await api("/api/auth/register",{method:"POST",body:JSON.stringify({name:$("#register-name").value.trim(),email:$("#register-email").value.trim(),password:$("#register-password").value})});localStorage.setItem(tokenKey,data.token);message(status,"Аккаунт создан. Перенаправляем…","success");setTimeout(()=>location.href="/account",350)}catch(err){message(status,err.message,"error")}});
 }
+async function accountInit(){
+ const host=$("#account-bookings"); if(!host)return;
+ const token=localStorage.getItem(tokenKey);
+ if(!token){location.replace("/auth");return;}
+ try{
+  const [me,items]=await Promise.all([api("/api/auth/me"),api("/api/bookings")]);
+  const user=me.user||{};
+  $("#profile-name").textContent=user.name||"Путешественник WayGo";
+  $("#profile-email").textContent=user.email||"";
+  $("#profile-avatar").textContent=(user.name||"W").trim().charAt(0).toLocaleUpperCase("ru-RU");
+  $("#profile-booking-count").textContent=items.length;
+  $("#profile-member-since").textContent="Активен";
+  if(user.is_admin){const actions=$(".profile-actions");if(actions&&!$("#admin-panel-link"))actions.insertAdjacentHTML("beforeend",'<a class="button button-outline" id="admin-panel-link" href="/admin">Админ-панель БД →</a>');}
+  if(!items.length){host.innerHTML='<div class="account-empty"><span class="account-empty-icon">✈</span><h3>Пока нет бронирований</h3><p>Самое время запланировать первую поездку.</p><a class="button button-primary" href="/catalog">Посмотреть билеты →</a></div>';}
+  else host.innerHTML=items.map(b=>`<article class="ticket-history"><strong>${esc(b.origin)} → ${esc(b.destination)}</strong><small>${esc(b.date)} · отправление ${esc(b.depart)} · место ${esc(b.seat)}</small><small>${esc(b.transport)} · ${esc(b.carrier)} · бронирование №${b.booking_id}</small><div class="history-price">${money(b.price)}</div></article>`).join("");
+ }catch(e){if(e.message.includes("Войдите")||e.message.includes("Сессия")){localStorage.removeItem(tokenKey);location.replace("/auth");return;}host.innerHTML=`<p class="empty-state">${esc(e.message)}</p>`;message($("#account-status"),e.message,"error");}
+ $("#logout-button")?.addEventListener("click",async()=>{try{await api("/api/auth/logout",{method:"POST"});}catch{}localStorage.removeItem(tokenKey);location.replace("/auth");});
+}
+
+async function adminInit(){
+ const root=$("#admin-root");if(!root)return;
+ const token=localStorage.getItem(tokenKey);if(!token){location.replace("/auth");return;}
+ try{
+  const me=await api("/api/auth/me");if(!me.user?.is_admin){root.innerHTML='<section class="content-card"><h2>Нет доступа</h2><p>Эта страница доступна только администратору.</p><a class="button button-primary" href="/account">Вернуться в профиль</a></section>';return;}
+  const data=await api("/api/admin/overview");
+  const stats=Object.entries(data.stats).map(([k,v])=>`<div class="admin-stat"><strong>${v}</strong><span>${({users:"Пользователи",bookings:"Бронирования",messages:"Сообщения",trips:"Маршруты"})[k]||k}</span></div>`).join("");
+  const table=(headers,rows)=>`<div class="admin-table-wrap"><table class="admin-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows||`<tr><td colspan="${headers.length}">Нет записей</td></tr>`}</tbody></table></div>`;
+  root.innerHTML=`<div class="admin-stats">${stats}</div><section class="content-card admin-section"><h2>Пользователи</h2>${table(["ID","Имя","Почта","Создан","Роль"],data.users.map(u=>`<tr><td>${u.id}</td><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc((u.created_at||"").slice(0,10))}</td><td>${u.is_admin?"Администратор":"Пользователь"}</td></tr>`).join(""))}</section><section class="content-card admin-section"><h2>Бронирования</h2>${table(["№","Пользователь","Маршрут","Дата","Место","Цена"],data.bookings.map(b=>`<tr><td>${b.booking_id}</td><td>${esc(b.email)}</td><td>${esc(b.origin)} → ${esc(b.destination)}</td><td>${esc(b.date)}</td><td>${esc(b.seat)}</td><td>${money(b.price)}</td></tr>`).join(""))}</section><section class="content-card admin-section"><h2>Сообщения с формы обратной связи</h2>${table(["ID","Имя","Почта","Сообщение","Дата"],data.messages.map(m=>`<tr><td>${m.id}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.message)}</td><td>${esc((m.created_at||"").slice(0,10))}</td></tr>`).join(""))}</section>`;
+ }catch(e){if(e.message.includes("Войдите")||e.message.includes("Сессия")){localStorage.removeItem(tokenKey);location.replace("/auth");return;}root.innerHTML=`<section class="content-card"><h2>Не удалось загрузить базу</h2><p>${esc(e.message)}</p></section>`;}
+}
+
 function contactInit(){
  const form=$("#contact-form");if(!form)return;
  form.addEventListener("submit",async e=>{e.preventDefault();const status=$("#contact-status");try{const data=await api("/api/contacts",{method:"POST",body:JSON.stringify({name:$("#contact-name").value.trim(),email:$("#contact-email").value.trim(),message:$("#contact-message").value.trim()})});message(status,data.message,"success");form.reset()}catch(err){message(status,err.message,"error")}});
@@ -124,4 +163,4 @@ async function externalCurrency(){
  try{const r=await fetch("https://api.frankfurter.app/latest?from=EUR&to=RUB");if(!r.ok)throw new Error("API недоступен");const d=await r.json();target.textContent=`Ориентировочный курс: 1 € ≈ ${Number(d.rates.RUB).toLocaleString("ru-RU",{maximumFractionDigits:2})} ₽`;target.dataset.source="Frankfurter API";}
  catch{target.textContent="Конвертация валюты временно недоступна";target.dataset.source="fallback";}
 }
-document.addEventListener("DOMContentLoaded",()=>{activeNav();mobileNav();homeSearch();loadFeatured();catalogInit();ticketInit();bookingInit();authInit();contactInit();externalCurrency();exploreInit()});
+document.addEventListener("DOMContentLoaded",()=>{activeNav();mobileNav();homeSearch();loadFeatured();catalogInit();ticketInit();bookingInit();authInit();accountInit();contactInit();externalCurrency();exploreInit();adminInit()});

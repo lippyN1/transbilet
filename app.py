@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Header
+import os
+import httpx
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr, Field
@@ -12,7 +14,7 @@ from pydantic import BaseModel, EmailStr, Field
 BASE = Path(__file__).resolve().parent
 DB_PATH = Path(__import__("os").environ.get("WAYGO_DB", BASE / "waygo.db"))
 PAGES = {"home": "index.html", "catalog": "catalog.html", "ticket": "ticket.html",
-         "booking": "booking.html", "contacts": "contacts.html", "auth": "auth.html", "explore": "explore.html"}
+         "booking": "booking.html", "contacts": "contacts.html", "auth": "auth.html", "explore": "explore.html", "account": "account.html", "admin": "admin.html"}
 
 TRIPS = [
  {"id":1,"origin":"Москва","destination":"Санкт-Петербург","origin_code":"MOW","destination_code":"LED","transport":"Самолёт","carrier":"Nordwind","depart":"07:15","arrive":"08:45","date":"2026-11-04","duration":"1 ч 30 мин","price":5890,"currency":"₽","badge":"Популярное","color":"violet"},
@@ -40,7 +42,7 @@ def init_db():
         c.executescript("""
         CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
-          email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL
+          email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL, is_admin INTEGER NOT NULL DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS sessions (
           token TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -64,6 +66,21 @@ def init_db():
           message TEXT NOT NULL, created_at TEXT NOT NULL
         );
         """)
+        # Safe migration for databases created by earlier WayGo versions.
+        user_columns = {row[1] for row in c.execute("PRAGMA table_info(users)").fetchall()}
+        if "is_admin" not in user_columns:
+            c.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
+        # An administrator is created only when credentials are explicitly configured
+        # by the project owner; no public/default admin password is shipped.
+        admin_email = os.getenv("WAYGO_ADMIN_EMAIL", "").strip().lower()
+        admin_password = os.getenv("WAYGO_ADMIN_PASSWORD", "")
+        if admin_email and admin_password:
+            row = c.execute("SELECT id FROM users WHERE email=?", (admin_email,)).fetchone()
+            if row:
+                c.execute("UPDATE users SET is_admin=1 WHERE id=?", (row[0],))
+            else:
+                c.execute("INSERT INTO users(name,email,password_hash,created_at,is_admin) VALUES(?,?,?,?,1)",
+                           ("Администратор WayGo", admin_email, password_hash(admin_password), datetime.now(timezone.utc).isoformat()))
         count = c.execute("SELECT COUNT(*) FROM trips").fetchone()[0]
         if count == 0:
             c.executemany("""INSERT INTO trips VALUES
@@ -94,6 +111,12 @@ def explore_page(): return page("explore")
 def contacts_page(): return page("contacts")
 @app.get("/auth", include_in_schema=False)
 def auth_page(): return page("auth")
+@app.get("/account", include_in_schema=False)
+def account_page(): return page("account")
+@app.get("/profile", include_in_schema=False)
+def profile_page(): return page("account")
+@app.get("/admin", include_in_schema=False)
+def admin_page(): return page("admin")
 
 @app.get("/health")
 def health(): return {"status":"ok","service":"WayGo"}
@@ -164,7 +187,7 @@ def current_user(authorization: Optional[str]):
         raise HTTPException(401, "Войдите в аккаунт, чтобы продолжить")
     token = authorization[7:]
     with db() as c:
-        row = c.execute("""SELECT users.id, users.name, users.email FROM users
+        row = c.execute("""SELECT users.id, users.name, users.email, users.is_admin FROM users
           JOIN sessions ON sessions.user_id=users.id WHERE sessions.token=? AND sessions.expires_at>?""",
           (token, datetime.now(timezone.utc).isoformat())).fetchone()
     if not row: raise HTTPException(401, "Сессия истекла. Войдите снова")
@@ -180,7 +203,7 @@ def register(body: RegisterBody):
         user_id = cur.lastrowid
         token = secrets.token_urlsafe(32)
         c.execute("INSERT INTO sessions VALUES(?,?,?)", (token,user_id,(datetime.now(timezone.utc)+timedelta(days=7)).isoformat()))
-    return {"token":token,"user":{"id":user_id,"name":body.name.strip(),"email":body.email.lower()}}
+    return {"token":token,"user":{"id":user_id,"name":body.name.strip(),"email":body.email.lower(),"is_admin":False}}
 
 @app.post("/api/auth/login")
 def login(body: LoginBody):
@@ -190,7 +213,7 @@ def login(body: LoginBody):
             raise HTTPException(401, "Неверная почта или пароль")
         token = secrets.token_urlsafe(32)
         c.execute("INSERT INTO sessions VALUES(?,?,?)", (token,row["id"],(datetime.now(timezone.utc)+timedelta(days=7)).isoformat()))
-    return {"token":token,"user":{"id":row["id"],"name":row["name"],"email":row["email"]}}
+    return {"token":token,"user":{"id":row["id"],"name":row["name"],"email":row["email"],"is_admin":bool(row["is_admin"])}}
 
 @app.get("/api/auth/me")
 def me(authorization: Optional[str]=Header(default=None)):
@@ -231,3 +254,71 @@ def send_contact(body: ContactBody):
         c.execute("INSERT INTO messages(name,email,message,created_at) VALUES(?,?,?,?)",
           (body.name.strip(),body.email.lower(),body.message.strip(),datetime.now(timezone.utc).isoformat()))
     return {"ok":True,"message":"Сообщение сохранено. Спасибо!"}
+
+
+# Free external services: Open-Meteo weather/geocoding and OpenStreetMap map tiles.
+def _geocode_city(city: str):
+    city = city.strip()
+    if len(city) < 2 or len(city) > 100:
+        raise HTTPException(422, "Укажи название города длиной от 2 до 100 символов")
+    try:
+        response = httpx.get("https://geocoding-api.open-meteo.com/v1/search",
+            params={"name": city, "count": 1, "language": "ru", "format": "json"}, timeout=8.0)
+        response.raise_for_status()
+        results = response.json().get("results") or []
+    except (httpx.HTTPError, ValueError):
+        raise HTTPException(502, "Сервис поиска городов временно недоступен")
+    if not results:
+        raise HTTPException(404, "Город не найден. Проверь название и попробуй ещё раз.")
+    place = results[0]
+    return {"name": place.get("name", city), "country": place.get("country", ""),
+            "latitude": float(place["latitude"]), "longitude": float(place["longitude"])}
+
+@app.get("/api/weather")
+def weather_api(city: str):
+    place = _geocode_city(city)
+    try:
+        response = httpx.get("https://api.open-meteo.com/v1/forecast", params={
+            "latitude": place["latitude"], "longitude": place["longitude"],
+            "current": "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m",
+            "timezone": "auto"}, timeout=8.0)
+        response.raise_for_status()
+        current = response.json().get("current")
+    except (httpx.HTTPError, ValueError):
+        raise HTTPException(502, "Прогноз погоды временно недоступен")
+    if not current:
+        raise HTTPException(502, "Сервис погоды не вернул прогноз")
+    return {"place": place, "weather": current, "source": "Open-Meteo"}
+
+@app.get("/api/map")
+def map_api(city: str):
+    place = _geocode_city(city)
+    lat, lon = place["latitude"], place["longitude"]
+    # Embed is served by OpenStreetMap; no Leaflet dependency or third-party marker icon.
+    bbox = f"{lon-0.08}%2C{lat-0.05}%2C{lon+0.08}%2C{lat+0.05}"
+    embed_url = f"https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik&marker={lat}%2C{lon}"
+    return {"place": place, "embed_url": embed_url,
+            "open_url": f"https://www.openstreetmap.org/?mlat={lat}&mlon={lon}#map=12/{lat}/{lon}",
+            "source": "OpenStreetMap"}
+
+def admin_user(authorization: Optional[str]):
+    user = current_user(authorization)
+    if not bool(user.get("is_admin")):
+        raise HTTPException(403, "Доступ только для администратора")
+    return user
+
+@app.get("/api/admin/overview")
+def admin_overview(authorization: Optional[str]=Header(default=None)):
+    admin_user(authorization)
+    with db() as c:
+        users = [dict(r) for r in c.execute("SELECT id,name,email,created_at,is_admin FROM users ORDER BY id DESC LIMIT 500")]
+        bookings = [dict(r) for r in c.execute("""SELECT b.id AS booking_id,b.user_id,u.email,b.trip_id,b.seat,b.passenger_name,b.created_at,
+            t.origin,t.destination,t.date,t.price,t.transport FROM bookings b JOIN users u ON u.id=b.user_id
+            JOIN trips t ON t.id=b.trip_id ORDER BY b.id DESC LIMIT 500""")]
+        messages = [dict(r) for r in c.execute("SELECT id,name,email,message,created_at FROM messages ORDER BY id DESC LIMIT 200")]
+        stats = {"users": c.execute("SELECT COUNT(*) FROM users").fetchone()[0],
+                 "bookings": c.execute("SELECT COUNT(*) FROM bookings").fetchone()[0],
+                 "messages": c.execute("SELECT COUNT(*) FROM messages").fetchone()[0],
+                 "trips": c.execute("SELECT COUNT(*) FROM trips").fetchone()[0]}
+    # Never expose password hashes or session tokens through the admin UI.
+    return {"stats": stats, "users": users, "bookings": bookings, "messages": messages}
