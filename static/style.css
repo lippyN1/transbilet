@@ -19,7 +19,7 @@
 
 
 /* Usability pass: legible route badges, predictable wrapping and destination weather/maps */
-.trip-badge{font-size:.84rem;line-height:1.35;letter-spacing:.015em;padding:7px 11px;margin-bottom:13px;max-width:100%;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
+.trip-badge{font-size:.84rem;line-height:1.35;letter-spacing:.015em;padding:7px 11px;margin:0 0 13px -11px;max-width:100%;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
 .trip-card{min-width:0;align-items:center}.trip-card>div:first-child{min-width:0}.trip-mainline{min-width:0}.trip-city{min-width:0}.trip-city small{overflow-wrap:anywhere}.trip-price{min-width:140px}.trip-price .button{white-space:normal;text-align:center}
 .explore-layout{display:grid;grid-template-columns:minmax(280px,.78fr) minmax(0,1.22fr);gap:22px;padding-top:26px;padding-bottom:48px;align-items:stretch}.content-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:25px;box-shadow:0 12px 32px rgba(34,43,78,.045);min-width:0}.explore-search-card h2,.explore-map-card h2,.weather-card h2{font-size:1.45rem;margin-bottom:15px}.explore-form label{display:block;font-size:.8rem;font-weight:700;color:#59647b;margin-bottom:7px}.explore-input-row{display:flex;gap:9px;align-items:center}.explore-input-row input{min-width:0;flex:1}.explore-input-row .button{padding:12px 15px}.weather-panel{display:flex;align-items:center;gap:18px;min-height:150px;padding:22px 0 10px}.weather-icon{display:grid;place-items:center;flex:0 0 74px;width:74px;height:74px;border-radius:22px;background:linear-gradient(145deg,#e8eaff,#f0f8ff);font-size:2.5rem}.weather-details{min-width:0}.weather-place{font-size:.85rem;font-weight:800;color:var(--muted)}.weather-temperature{font:800 2.5rem/1.1 Manrope,sans-serif;letter-spacing:-.06em;margin:3px 0}.weather-details h3{font-size:1rem;margin:0 0 5px}.weather-details p{font-size:.75rem;line-height:1.5;margin:0;overflow-wrap:anywhere}.weather-attribution,.map-footnote{font-size:.72rem;color:#9098aa;margin:12px 0 0}.map-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.map-heading h2{margin-bottom:15px}.map-heading .text-link{white-space:nowrap;font-size:.77rem}.destination-map{width:100%;height:390px;border-radius:15px;overflow:hidden;background:#eef1f7;z-index:0}.ticket-map{height:300px;margin:18px 0}.ticket-weather-block{margin-top:20px}.ticket-weather-title{font-size:1.3rem;margin-bottom:12px}.ticket-weather-summary{min-height:100px}.ticket-weather-summary .weather-icon{float:left;margin-right:16px}.ticket-weather-summary .weather-details{padding-top:4px}.weather-loading{padding:25px 0;color:var(--muted);font-size:.86rem}.explore-bottom{display:flex;justify-content:space-between;align-items:center;gap:25px;padding-bottom:80px}.explore-bottom h2{font-size:1.6rem}.explore-bottom p{margin-bottom:0}.booking-help-card .button{white-space:normal;margin-top:5px}.weather-card{padding:22px}.weather-card h2{overflow-wrap:anywhere}.booking-aside .weather-card{min-width:0}
 @media(max-width:900px){.explore-layout{grid-template-columns:1fr}.destination-map{height:340px}.explore-bottom{padding-bottom:55px}}
@@ -202,6 +202,66 @@ body>main{flex:1 0 auto}
     color: #a99bff;
 }
 
+/* Brand word in section eyebrows, e.g. «ПОЧЕМУ waygo?» */
+.brand-inline{
+    display:inline-block;
+    font-family:Manrope,"DM Sans",sans-serif;
+    font-weight:800;
+    letter-spacing:-.07em;
+    text-transform:none;
+    color:#17213a;
+    line-height:1;
+    font-size:1.08em;
+}
+.feature-band .eyebrow .brand-inline{color:#17213a}
+.feature-band .eyebrow .brand-inline .brand-accent,
+.brand-inline .brand-accent{color:var(--purple)}
+.feature-band .eyebrow{
+    display:flex;
+    align-items:baseline;
+    flex-wrap:wrap;
+    gap:.3em;
+    margin-bottom:14px;
+}
+.feature-lead{min-width:0}
+.feature-lead h2{margin-bottom:0}
+.bottom-cta{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:28px;
+}
+.bottom-cta-copy{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-start;
+    gap:12px;
+    min-width:0;
+    flex:1 1 auto;
+}
+.bottom-cta .eyebrow{
+    margin:0;
+    letter-spacing:.14em;
+    line-height:1.2;
+}
+.bottom-cta h2{
+    margin:0;
+    max-width:690px;
+    font-size:clamp(1.7rem,3vw,2rem);
+    line-height:1.2;
+}
+.bottom-cta .button{
+    flex-shrink:0;
+    align-self:center;
+    margin:0;
+}
+@media(max-width:720px){
+    .bottom-cta{flex-direction:column;align-items:stretch;gap:18px;padding-top:48px;padding-bottom:52px}
+    .bottom-cta .button{width:100%}
+    .feature-band .eyebrow{margin-bottom:12px}
+}
+
 @media (max-width: 480px) {
     .site-header .brand {
         font-size: 22px;
@@ -242,5 +302,57 @@ body>main{flex:1 0 auto}
 .admin-db-chip strong{font-size:.92rem;color:#202944}
 .admin-db-chip span{font-size:.76rem;color:#6c7890}
 .admin-subheading{font:750 1rem Manrope,sans-serif;margin:8px 0 14px;color:#202944}
-@media(max-width:760px){.admin-tabs{gap:6px}.admin-tab{flex:1 1 calc(50% - 6px);font-size:.82rem}.detail-bottom .button{width:100%}.trip-price{align-items:stretch}.trip-price .button{max-width:none}}
+@media(max-width:760px){.admin-tabs{gap:6px}.admin-tab{flex:1 1 calc(50% - 6px);font-size:.82rem}.detail-bottom .button{width:100%}}
+
+/* Только цена + «за пассажира» + кнопка «Выбрать» — ровная правая колонка */
+.trip-price{
+  min-width:140px;
+  width:140px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:center;
+  gap:10px;
+  align-self:center;
+}
+.trip-price-value{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  text-align:center;
+}
+.trip-price-value strong{
+  font:800 1.2rem Manrope,sans-serif;
+  white-space:nowrap;
+  line-height:1.15;
+}
+.trip-price-value small{
+  color:#8a92a6;
+  font-size:.7rem;
+  line-height:1.2;
+}
+.trip-price .button{
+  width:100%;
+  max-width:none;
+  min-height:40px;
+  height:40px;
+  padding:0 12px;
+  white-space:nowrap;
+  text-align:center;
+  font-size:.8rem;
+  gap:8px;
+}
+@media(max-width:720px){
+  .trip-price{
+    width:100%;
+    min-width:0;
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .trip-price-value{align-items:flex-start;text-align:left}
+  .trip-price .button{width:auto;min-width:120px}
+}
 
