@@ -3,21 +3,106 @@ const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 const tokenKey = "waygo_token";
 const money = n => new Intl.NumberFormat("ru-RU").format(n) + " ₽";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function apiErrorDetail(data){
+  const d=data?.detail;
+  if(typeof d==="string") return d;
+  if(Array.isArray(d)) return d.map(item=>item?.msg||item?.detail||String(item)).join("; ");
+  if(d && typeof d==="object" && d.msg) return d.msg;
+  return "Произошла ошибка";
+}
 async function api(url, options={}) {
   const headers = {"Content-Type":"application/json", ...(options.headers||{})};
   const token = localStorage.getItem(tokenKey);
   if(token) headers.Authorization = `Bearer ${token}`;
   const response = await fetch(url, {...options, headers});
   const data = await response.json().catch(()=>({detail:"Не удалось прочитать ответ сервера"}));
-  if(!response.ok) throw new Error(data.detail || "Произошла ошибка");
+  if(!response.ok) throw new Error(apiErrorDetail(data));
   return data;
 }
 function message(el, text, type="") { if(!el) return; el.textContent=text; el.className="form-message"+(type?" "+type:""); }
 function weatherDescription(code){const c=Number(code);if(c===0)return "Ясно";if([1,2,3].includes(c))return "Переменная облачность";if([45,48].includes(c))return "Туман";if([51,53,55,56,57].includes(c))return "Морось";if([61,63,65,66,67,80,81,82].includes(c))return "Дождь";if([71,73,75,77,85,86].includes(c))return "Снег";if([95,96,99].includes(c))return "Гроза";return "Погодные условия";}
 async function getPlaceWeather(city){return api(`/api/weather?city=${encodeURIComponent(city)}`);}
-function weatherMarkup(data){const w=data.weather;const icon=Number(w.weather_code)===0?"☀":Number(w.weather_code)>=71?"❄":Number(w.weather_code)>=61?"🌧":"☁";return `<div class="weather-icon" aria-hidden="true">${icon}</div><div class="weather-details"><div class="weather-place">${esc(data.place.name)}${data.place.country?`, ${esc(data.place.country)}`:""}</div><div class="weather-temperature">${Math.round(w.temperature_2m)}°C</div><h3>${weatherDescription(w.weather_code)}</h3><p>Ощущается как ${Math.round(w.apparent_temperature)}°C · Ветер ${Math.round(w.wind_speed_10m)} км/ч · Влажность ${Math.round(w.relative_humidity_2m)}%</p></div>`;}
-async function renderWeatherMap(city,{weatherHost,mapTitle,summary,openLink,mapId="destination-map"}={}){const data=await getPlaceWeather(city);if(weatherHost)weatherHost.innerHTML=weatherMarkup(data);if(summary)summary.textContent=`${Math.round(data.weather.temperature_2m)}°C · ${weatherDescription(data.weather.weather_code)} · ветер ${Math.round(data.weather.wind_speed_10m)} км/ч`;if(mapTitle)mapTitle.textContent=`${data.place.name} на карте`;const mapData=await api(`/api/map?city=${encodeURIComponent(city)}`);if(openLink)openLink.href=mapData.open_url;const mapEl=document.getElementById(mapId);if(mapEl){mapEl.innerHTML=`<iframe title="Карта города ${esc(data.place.name)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${esc(mapData.embed_url)}" allowfullscreen></iframe>`;}return data;}
-async function exploreInit(){const form=$("#explore-form");if(!form)return;const input=$("#explore-city"),host=$("#explore-weather"),status=$("#explore-status");const params=new URLSearchParams(location.search);if(params.get("city"))input.value=params.get("city");const run=async()=>{host.innerHTML='<div class="weather-loading">Загружаем погоду и карту…</div>';message(status,"");try{const d=await renderWeatherMap(input.value.trim(),{weatherHost:host,mapTitle:$("#explore-map-title"),openLink:$("#open-osm")});$("#explore-location-note").textContent=`Координаты: ${d.place.latitude.toFixed(3)}, ${d.place.longitude.toFixed(3)}. Погодные данные обновляются внешним сервисом.`;}catch(e){host.innerHTML=`<p class="empty-state">${esc(e.message)}</p>`;message(status,e.message,"error");}};form.addEventListener("submit",e=>{e.preventDefault();run();});run();}
+function weatherMarkup(data){const w=data.weather;const code=Number(w.weather_code);const icon=code===0?"☀":code>=71?"❄":code>=61?"🌧":"☁";return `<div class="weather-icon" aria-hidden="true">${icon}</div><div class="weather-details"><div class="weather-place">${esc(data.place.name)}${data.place.country?`, ${esc(data.place.country)}`:""}</div><div class="weather-temperature">${Math.round(w.temperature_2m)}°C</div><h3>${weatherDescription(code)}</h3><p>Ощущается как ${Math.round(w.apparent_temperature)}°C · Ветер ${Math.round(w.wind_speed_10m)} км/ч · Влажность ${Math.round(w.relative_humidity_2m)}%</p></div>`;}
+let leafletReady=null;
+const mapInstances={};
+function loadLeaflet(){
+  if(window.L) return Promise.resolve(window.L);
+  if(leafletReady) return leafletReady;
+  leafletReady=new Promise((resolve,reject)=>{
+    const css=document.createElement("link");
+    css.rel="stylesheet";
+    css.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    css.integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+    css.crossOrigin="";
+    document.head.appendChild(css);
+    const script=document.createElement("script");
+    script.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    script.integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
+    script.crossOrigin="";
+    script.onload=()=>window.L?resolve(window.L):reject(new Error("Карта не загрузилась"));
+    script.onerror=()=>reject(new Error("Не удалось загрузить карту"));
+    document.head.appendChild(script);
+  });
+  return leafletReady;
+}
+async function renderInteractiveMap(mapId, place, zoom=12){
+  const mapEl=document.getElementById(mapId);
+  if(!mapEl||!place) return;
+  const L=await loadLeaflet();
+  if(mapInstances[mapId]){mapInstances[mapId].remove();delete mapInstances[mapId];}
+  mapEl.innerHTML="";
+  mapEl.classList.add("is-ready");
+  const map=L.map(mapEl,{attributionControl:false,zoomControl:true,scrollWheelZoom:true})
+    .setView([place.latitude, place.longitude], zoom);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19
+  }).addTo(map);
+  L.circleMarker([place.latitude, place.longitude],{
+    radius:9,color:"#6558e8",weight:2,fillColor:"#6558e8",fillOpacity:.92
+  }).addTo(map);
+  mapInstances[mapId]=map;
+  requestAnimationFrame(()=>{map.invalidateSize();setTimeout(()=>map.invalidateSize(),120);});
+  return map;
+}
+async function renderWeatherMap(city,{weatherHost,mapTitle,summary,mapId="destination-map"}={}){
+  const data=await getPlaceWeather(city);
+  if(weatherHost) weatherHost.innerHTML=weatherMarkup(data);
+  if(summary) summary.textContent=`${Math.round(data.weather.temperature_2m)}°C · ${weatherDescription(data.weather.weather_code)} · ветер ${Math.round(data.weather.wind_speed_10m)} км/ч`;
+  if(mapTitle) mapTitle.textContent=`${data.place.name} на карте`;
+  const mapEl=document.getElementById(mapId);
+  if(mapEl){
+    try{
+      const mapData=await api(`/api/map?city=${encodeURIComponent(city)}`);
+      await renderInteractiveMap(mapId, mapData.place||data.place, mapData.zoom||12);
+    }catch(mapErr){
+      mapEl.innerHTML=`<p class="empty-state">${esc(mapErr.message||"Карта временно недоступна")}</p>`;
+    }
+  }
+  return data;
+}
+async function exploreInit(){
+  const form=$("#explore-form"); if(!form) return;
+  const input=$("#explore-city"), host=$("#explore-weather"), status=$("#explore-status"), mapEl=$("#destination-map");
+  const params=new URLSearchParams(location.search);
+  if(params.get("city")) input.value=params.get("city");
+  const run=async()=>{
+    const city=input.value.trim();
+    host.innerHTML='<div class="weather-loading">Загружаем прогноз…</div>';
+    if(mapEl) mapEl.innerHTML='<div class="weather-loading map-loading">Загружаем карту…</div>';
+    message(status,"");
+    try{
+      const d=await renderWeatherMap(city,{weatherHost:host,mapTitle:$("#explore-map-title")});
+      const note=$("#explore-location-note");
+      if(note) note.textContent=`${d.place.name}: используй + / − для масштаба карты.`;
+    }catch(e){
+      host.innerHTML=`<p class="empty-state">${esc(e.message)}</p>`;
+      if(mapEl) mapEl.innerHTML=`<p class="empty-state">${esc(e.message)}</p>`;
+      message(status,e.message,"error");
+    }
+  };
+  form.addEventListener("submit",e=>{e.preventDefault();run();});
+  run();
+}
 function activeNav(){
  const path=location.pathname==="/"?"home":location.pathname.slice(1);
  $$("[data-nav]").forEach(a=>{if(a.dataset.nav===path)a.classList.add("active")});

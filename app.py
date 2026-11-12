@@ -255,14 +255,17 @@ def send_contact(body: ContactBody):
     return {"ok":True,"message":"Сообщение сохранено. Спасибо!"}
 
 
-# Free external services: Open-Meteo weather/geocoding and OpenStreetMap map tiles.
+# Free external services: Open-Meteo weather/geocoding; map tiles rendered client-side.
+_HTTP_HEADERS = {"User-Agent": "WayGo/1.0 (educational travel demo)", "Accept": "application/json"}
+
 def _geocode_city(city: str):
     city = city.strip()
     if len(city) < 2 or len(city) > 100:
         raise HTTPException(422, "Укажи название города длиной от 2 до 100 символов")
     try:
         response = httpx.get("https://geocoding-api.open-meteo.com/v1/search",
-            params={"name": city, "count": 1, "language": "ru", "format": "json"}, timeout=8.0)
+            params={"name": city, "count": 1, "language": "ru", "format": "json"},
+            headers=_HTTP_HEADERS, timeout=10.0)
         response.raise_for_status()
         results = response.json().get("results") or []
     except (httpx.HTTPError, ValueError):
@@ -280,25 +283,20 @@ def weather_api(city: str):
         response = httpx.get("https://api.open-meteo.com/v1/forecast", params={
             "latitude": place["latitude"], "longitude": place["longitude"],
             "current": "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m",
-            "timezone": "auto"}, timeout=8.0)
+            "timezone": "auto"}, headers=_HTTP_HEADERS, timeout=10.0)
         response.raise_for_status()
         current = response.json().get("current")
     except (httpx.HTTPError, ValueError):
         raise HTTPException(502, "Прогноз погоды временно недоступен")
     if not current:
         raise HTTPException(502, "Сервис погоды не вернул прогноз")
-    return {"place": place, "weather": current, "source": "Open-Meteo"}
+    return {"place": place, "weather": current}
 
 @app.get("/api/map")
 def map_api(city: str):
     place = _geocode_city(city)
-    lat, lon = place["latitude"], place["longitude"]
-    # Embed is served by OpenStreetMap; no Leaflet dependency or third-party marker icon.
-    bbox = f"{lon-0.08}%2C{lat-0.05}%2C{lon+0.08}%2C{lat+0.05}"
-    embed_url = f"https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik&marker={lat}%2C{lon}"
-    return {"place": place, "embed_url": embed_url,
-            "open_url": f"https://www.openstreetmap.org/?mlat={lat}&mlon={lon}#map=12/{lat}/{lon}",
-            "source": "OpenStreetMap"}
+    # Frontend builds an interactive Leaflet map from these coordinates.
+    return {"place": place, "latitude": place["latitude"], "longitude": place["longitude"], "zoom": 12}
 
 def admin_user(authorization: Optional[str]):
     user = current_user(authorization)

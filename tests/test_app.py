@@ -134,3 +134,13 @@ def test_weather_and_map_api_validate_city(monkeypatch):
     with TestClient(waygo.app) as client:
         assert client.get("/api/weather?city=x").status_code == 422
         assert client.get("/api/map?city=x").status_code == 422
+
+
+def test_map_api_returns_coordinates_for_leaflet():
+    with TestClient(waygo.app) as client:
+        response = client.get("/api/map", params={"city": "Москва"})
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert "latitude" in data and "longitude" in data
+        assert data["place"]["name"]
+        assert "embed_url" not in data

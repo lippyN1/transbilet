@@ -101,16 +101,23 @@ body>main{flex:1 0 auto}
 .about-story-number{font-size:13px;font-weight:800;letter-spacing:.16em;color:#6557e8;margin-bottom:22px}
 .about-story-note strong{font-family:Manrope,sans-serif;font-size:clamp(23px,2.4vw,31px);letter-spacing:-.04em;color:#202944}
 .about-story-note>span:last-child{font-size:13px;color:#7c879b;margin-top:24px}
-/* OpenStreetMap's own embed is used instead of a JS map library. */
-.destination-map{overflow:hidden;border:1px solid #e4e8f2;border-radius:18px;background:#f3f6fb;min-height:360px}
-.destination-map iframe{display:block;width:100%;height:360px;border:0}
+/* Interactive Leaflet map: zoom controls only, no attribution chrome. */
+.destination-map{overflow:hidden;border:1px solid #e4e8f2;border-radius:18px;background:#f3f6fb;min-height:360px;height:360px;position:relative}
+.destination-map .leaflet-container{width:100%;height:100%;min-height:360px;border-radius:18px;font:inherit;background:#eef2f8}
+.destination-map .leaflet-control-attribution,.destination-map .leaflet-control-attribution *{display:none!important}
+.destination-map .leaflet-control-zoom{border:0!important;box-shadow:0 8px 20px rgba(34,43,78,.12)!important;margin:14px!important;border-radius:12px;overflow:hidden}
+.destination-map .leaflet-control-zoom a{width:36px!important;height:36px!important;line-height:36px!important;font-size:18px!important;color:#2a3554!important;background:#fff!important;border-bottom:1px solid #edf0f6!important}
+.destination-map .leaflet-control-zoom a:hover{background:#f5f3ff!important;color:var(--purple)!important}
+.map-loading,.destination-map .empty-state{display:grid;place-items:center;height:100%;min-height:360px;margin:0;padding:20px;text-align:center}
+.weather-panel{min-height:160px}
+.weather-attribution{display:none}
 .admin-layout{padding-top:36px;padding-bottom:70px}
 .admin-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}
 .admin-stat{display:flex;flex-direction:column;gap:7px;padding:22px;border:1px solid #e4e8f2;border-radius:18px;background:#fff;box-shadow:0 8px 24px rgba(26,42,84,.035)}
 .admin-stat strong{font:800 30px Manrope,sans-serif;color:#242d49}.admin-stat span{font-size:13px;color:#6c7890}
 .admin-section{padding:24px;margin:18px 0;min-width:0}.admin-section h2{font:750 21px Manrope,sans-serif;margin:0 0 18px;color:#202944}
 .admin-table-wrap{overflow-x:auto;width:100%}.admin-table{border-collapse:collapse;width:100%;font-size:13px;text-align:left}.admin-table th,.admin-table td{padding:12px 14px;border-bottom:1px solid #edf0f6;vertical-align:top}.admin-table th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#69768d;background:#f8f9fc}.admin-table td{color:#35415b;max-width:340px;overflow-wrap:anywhere}.admin-table tbody tr:hover{background:#fafbff}
-@media(max-width:760px){.about-story{grid-template-columns:1fr}.admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-section{padding:16px}.admin-table{min-width:680px}.destination-map,.destination-map iframe{min-height:300px;height:300px}}
+@media(max-width:760px){.about-story{grid-template-columns:1fr}.admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-section{padding:16px}.admin-table{min-width:680px}.destination-map,.destination-map .leaflet-container,.map-loading{min-height:300px;height:300px}}
 
 
 /* WayGo visual consistency pass: shared alignment, brand mark and stable navigation. */
@@ -186,9 +193,13 @@ body>main{flex:1 0 auto}
     color: #6758e8;
 }
 
-/* Не увеличивать логотип в подвале */
+/* Не увеличивать логотип в подвале; «way» белый на тёмном фоне */
 .site-footer .brand {
     font-size: 22px;
+    color: #fff;
+}
+.site-footer .brand .brand-accent {
+    color: #a99bff;
 }
 
 @media (max-width: 480px) {
