@@ -21,7 +21,26 @@ async function api(url, options={}) {
 }
 function message(el, text, type="") { if(!el) return; el.textContent=text; el.className="form-message"+(type?" "+type:""); }
 function weatherDescription(code){const c=Number(code);if(c===0)return "Ясно";if([1,2,3].includes(c))return "Переменная облачность";if([45,48].includes(c))return "Туман";if([51,53,55,56,57].includes(c))return "Морось";if([61,63,65,66,67,80,81,82].includes(c))return "Дождь";if([71,73,75,77,85,86].includes(c))return "Снег";if([95,96,99].includes(c))return "Гроза";return "Погодные условия";}
-async function getPlaceWeather(city){return api(`/api/weather?city=${encodeURIComponent(city)}`);}
+async function fetchWeatherDirect(city){
+  const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ru&format=json`);
+  if(!geoRes.ok) throw new Error("Сервис поиска городов временно недоступен");
+  const geo=await geoRes.json();
+  const hit=(geo.results&&geo.results[0])||null;
+  if(!hit) throw new Error("Город не найден. Проверь название и попробуй ещё раз.");
+  const place={name:hit.name||city,country:hit.country||"",latitude:Number(hit.latitude),longitude:Number(hit.longitude)};
+  const weatherRes=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto`);
+  if(!weatherRes.ok) throw new Error("Прогноз погоды временно недоступен");
+  const weatherJson=await weatherRes.json();
+  if(!weatherJson.current) throw new Error("Сервис погоды не вернул прогноз");
+  return {place,weather:weatherJson.current};
+}
+async function getPlaceWeather(city){
+  try{return await api(`/api/weather?city=${encodeURIComponent(city)}`);}
+  catch(err){
+    try{return await fetchWeatherDirect(city);}
+    catch{throw err;}
+  }
+}
 function weatherMarkup(data){const w=data.weather;const code=Number(w.weather_code);const icon=code===0?"☀":code>=71?"❄":code>=61?"🌧":"☁";return `<div class="weather-icon" aria-hidden="true">${icon}</div><div class="weather-details"><div class="weather-place">${esc(data.place.name)}${data.place.country?`, ${esc(data.place.country)}`:""}</div><div class="weather-temperature">${Math.round(w.temperature_2m)}°C</div><h3>${weatherDescription(code)}</h3><p>Ощущается как ${Math.round(w.apparent_temperature)}°C · Ветер ${Math.round(w.wind_speed_10m)} км/ч · Влажность ${Math.round(w.relative_humidity_2m)}%</p></div>`;}
 let leafletReady=null;
 const mapInstances={};
@@ -65,19 +84,28 @@ async function renderInteractiveMap(mapId, place, zoom=12){
   return map;
 }
 async function renderWeatherMap(city,{weatherHost,mapTitle,summary,mapId="destination-map"}={}){
-  const data=await getPlaceWeather(city);
-  if(weatherHost) weatherHost.innerHTML=weatherMarkup(data);
-  if(summary) summary.textContent=`${Math.round(data.weather.temperature_2m)}°C · ${weatherDescription(data.weather.weather_code)} · ветер ${Math.round(data.weather.wind_speed_10m)} км/ч`;
-  if(mapTitle) mapTitle.textContent=`${data.place.name} на карте`;
+  let data=null, weatherError=null;
+  try{
+    data=await getPlaceWeather(city);
+    if(weatherHost) weatherHost.innerHTML=weatherMarkup(data);
+    if(summary) summary.textContent=`${Math.round(data.weather.temperature_2m)}°C · ${weatherDescription(data.weather.weather_code)} · ветер ${Math.round(data.weather.wind_speed_10m)} км/ч`;
+    if(mapTitle) mapTitle.textContent=`${data.place.name} на карте`;
+  }catch(err){
+    weatherError=err;
+    if(weatherHost) weatherHost.innerHTML=`<p class="empty-state">${esc(err.message)}</p>`;
+    if(summary) summary.textContent=err.message;
+  }
   const mapEl=document.getElementById(mapId);
   if(mapEl){
     try{
       const mapData=await api(`/api/map?city=${encodeURIComponent(city)}`);
-      await renderInteractiveMap(mapId, mapData.place||data.place, mapData.zoom||12);
+      if(mapTitle && !data) mapTitle.textContent=`${mapData.place?.name||city} на карте`;
+      await renderInteractiveMap(mapId, mapData.place||data?.place, mapData.zoom||12);
     }catch(mapErr){
       mapEl.innerHTML=`<p class="empty-state">${esc(mapErr.message||"Карта временно недоступна")}</p>`;
     }
   }
+  if(weatherError) throw weatherError;
   return data;
 }
 async function exploreInit(){
@@ -94,9 +122,10 @@ async function exploreInit(){
       const d=await renderWeatherMap(city,{weatherHost:host,mapTitle:$("#explore-map-title")});
       const note=$("#explore-location-note");
       if(note) note.textContent=`${d.place.name}: используй + / − для масштаба карты.`;
+      message(status,"");
     }catch(e){
       host.innerHTML=`<p class="empty-state">${esc(e.message)}</p>`;
-      if(mapEl) mapEl.innerHTML=`<p class="empty-state">${esc(e.message)}</p>`;
+      if(mapEl && !mapEl.querySelector(".leaflet-container")) mapEl.innerHTML=`<p class="empty-state">Карта недоступна. Попробуй ещё раз.</p>`;
       message(status,e.message,"error");
     }
   };

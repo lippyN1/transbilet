@@ -258,35 +258,69 @@ def send_contact(body: ContactBody):
 # Free external services: Open-Meteo weather/geocoding; map tiles rendered client-side.
 _HTTP_HEADERS = {"User-Agent": "WayGo/1.0 (educational travel demo)", "Accept": "application/json"}
 
+# Built-in coordinates help when geocoding is temporarily blocked.
+_CITY_COORDS = {
+    "санкт-петербург": ("Санкт-Петербург", "Россия", 59.93863, 30.31413),
+    "петербург": ("Санкт-Петербург", "Россия", 59.93863, 30.31413),
+    "спб": ("Санкт-Петербург", "Россия", 59.93863, 30.31413),
+    "москва": ("Москва", "Россия", 55.75204, 37.61781),
+    "казань": ("Казань", "Россия", 55.78874, 49.12214),
+    "сочи": ("Сочи", "Россия", 43.58547, 39.72315),
+    "калининград": ("Калининград", "Россия", 54.70649, 20.51095),
+    "нижний новгород": ("Нижний Новгород", "Россия", 56.32689, 44.00599),
+    "екатеринбург": ("Екатеринбург", "Россия", 56.83801, 60.59746),
+    "минск": ("Минск", "Беларусь", 53.90024, 27.55904),
+    "ярославль": ("Ярославль", "Россия", 57.62987, 39.87368),
+}
+
+def _http_get(url: str, params: dict):
+    last_error = None
+    for attempt in range(3):
+        try:
+            response = httpx.get(url, params=params, headers=_HTTP_HEADERS,
+                                 timeout=12.0, follow_redirects=True, trust_env=False)
+            response.raise_for_status()
+            return response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            last_error = exc
+    raise last_error or HTTPException(502, "Внешний сервис временно недоступен")
+
 def _geocode_city(city: str):
     city = city.strip()
     if len(city) < 2 or len(city) > 100:
         raise HTTPException(422, "Укажи название города длиной от 2 до 100 символов")
+    key = city.lower().replace("ё", "е")
     try:
-        response = httpx.get("https://geocoding-api.open-meteo.com/v1/search",
-            params={"name": city, "count": 1, "language": "ru", "format": "json"},
-            headers=_HTTP_HEADERS, timeout=10.0)
-        response.raise_for_status()
-        results = response.json().get("results") or []
-    except (httpx.HTTPError, ValueError):
-        raise HTTPException(502, "Сервис поиска городов временно недоступен")
+        payload = _http_get("https://geocoding-api.open-meteo.com/v1/search",
+                            {"name": city, "count": 1, "language": "ru", "format": "json"})
+        results = payload.get("results") or []
+        if results:
+            place = results[0]
+            return {"name": place.get("name", city), "country": place.get("country", ""),
+                    "latitude": float(place["latitude"]), "longitude": float(place["longitude"])}
+    except Exception:
+        results = []
+    if key in _CITY_COORDS:
+        name, country, lat, lon = _CITY_COORDS[key]
+        return {"name": name, "country": country, "latitude": lat, "longitude": lon}
+    for known, meta in _CITY_COORDS.items():
+        if known in key or key in known:
+            name, country, lat, lon = meta
+            return {"name": name, "country": country, "latitude": lat, "longitude": lon}
     if not results:
         raise HTTPException(404, "Город не найден. Проверь название и попробуй ещё раз.")
-    place = results[0]
-    return {"name": place.get("name", city), "country": place.get("country", ""),
-            "latitude": float(place["latitude"]), "longitude": float(place["longitude"])}
+    raise HTTPException(502, "Сервис поиска городов временно недоступен")
 
 @app.get("/api/weather")
 def weather_api(city: str):
     place = _geocode_city(city)
     try:
-        response = httpx.get("https://api.open-meteo.com/v1/forecast", params={
+        payload = _http_get("https://api.open-meteo.com/v1/forecast", {
             "latitude": place["latitude"], "longitude": place["longitude"],
             "current": "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m",
-            "timezone": "auto"}, headers=_HTTP_HEADERS, timeout=10.0)
-        response.raise_for_status()
-        current = response.json().get("current")
-    except (httpx.HTTPError, ValueError):
+            "timezone": "auto"})
+        current = payload.get("current")
+    except Exception:
         raise HTTPException(502, "Прогноз погоды временно недоступен")
     if not current:
         raise HTTPException(502, "Сервис погоды не вернул прогноз")
