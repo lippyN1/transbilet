@@ -70,10 +70,9 @@ def init_db():
         user_columns = {row[1] for row in c.execute("PRAGMA table_info(users)").fetchall()}
         if "is_admin" not in user_columns:
             c.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
-        # An administrator is created only when credentials are explicitly configured
-        # by the project owner; no public/default admin password is shipped.
-        admin_email = os.getenv("WAYGO_ADMIN_EMAIL", "").strip().lower()
-        admin_password = os.getenv("WAYGO_ADMIN_PASSWORD", "")
+        # Demo admin for the educational project; override via env when deploying.
+        admin_email = (os.getenv("WAYGO_ADMIN_EMAIL") or "admin@waygo.app").strip().lower()
+        admin_password = os.getenv("WAYGO_ADMIN_PASSWORD") or "AdminWayGo123"
         if admin_email and admin_password:
             row = c.execute("SELECT id FROM users WHERE email=?", (admin_email,)).fetchone()
             if row:
@@ -316,9 +315,13 @@ def admin_overview(authorization: Optional[str]=Header(default=None)):
             t.origin,t.destination,t.date,t.price,t.transport FROM bookings b JOIN users u ON u.id=b.user_id
             JOIN trips t ON t.id=b.trip_id ORDER BY b.id DESC LIMIT 500""")]
         messages = [dict(r) for r in c.execute("SELECT id,name,email,message,created_at FROM messages ORDER BY id DESC LIMIT 200")]
+        trips = [dict(r) for r in c.execute("""SELECT id,origin,destination,origin_code,destination_code,transport,carrier,
+            date,depart,arrive,duration,price,currency,badge FROM trips ORDER BY id ASC LIMIT 500""")]
+        tables = [{"name": r[0], "rows": c.execute(f'SELECT COUNT(*) FROM "{r[0]}"').fetchone()[0]}
+                  for r in c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")]
         stats = {"users": c.execute("SELECT COUNT(*) FROM users").fetchone()[0],
                  "bookings": c.execute("SELECT COUNT(*) FROM bookings").fetchone()[0],
                  "messages": c.execute("SELECT COUNT(*) FROM messages").fetchone()[0],
                  "trips": c.execute("SELECT COUNT(*) FROM trips").fetchone()[0]}
     # Never expose password hashes or session tokens through the admin UI.
-    return {"stats": stats, "users": users, "bookings": bookings, "messages": messages}
+    return {"stats": stats, "users": users, "bookings": bookings, "messages": messages, "trips": trips, "tables": tables}

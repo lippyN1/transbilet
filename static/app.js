@@ -117,10 +117,10 @@ function authInit(){
  // discard only that stale token and leave the user on the login tab.
  const savedToken=localStorage.getItem(tokenKey);
  if(savedToken){
-  api("/api/auth/me").then(()=>{location.replace("/account")}).catch(()=>{localStorage.removeItem(tokenKey)});
+  api("/api/auth/me").then(me=>{location.replace(me.user?.is_admin?"/admin":"/account")}).catch(()=>{localStorage.removeItem(tokenKey)});
  }
  tabs.forEach(tab=>tab.addEventListener("click",()=>{tabs.forEach(t=>{t.classList.toggle("is-active",t===tab);t.setAttribute("aria-selected",String(t===tab))});const reg=tab.dataset.mode==="register";const login=$("#login-panel"),register=$("#register-panel");login.hidden=reg;register.hidden=!reg;const active=reg?register:login;active.classList.remove("panel-replay");void active.offsetWidth;active.classList.add("panel-replay");}));
- $("#login-form")?.addEventListener("submit",async e=>{e.preventDefault();const status=$("#login-status");try{const data=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("#login-email").value.trim(),password:$("#login-password").value})});localStorage.setItem(tokenKey,data.token);message(status,"Вход выполнен. Перенаправляем…","success");setTimeout(()=>location.href="/account",350)}catch(err){message(status,err.message,"error")}});
+ $("#login-form")?.addEventListener("submit",async e=>{e.preventDefault();const status=$("#login-status");try{const data=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("#login-email").value.trim(),password:$("#login-password").value})});localStorage.setItem(tokenKey,data.token);message(status,"Вход выполнен. Перенаправляем…","success");const next=data.user?.is_admin?"/admin":"/account";setTimeout(()=>location.href=next,350)}catch(err){message(status,err.message,"error")}});
  $("#register-form")?.addEventListener("submit",async e=>{e.preventDefault();const status=$("#register-status");try{const data=await api("/api/auth/register",{method:"POST",body:JSON.stringify({name:$("#register-name").value.trim(),email:$("#register-email").value.trim(),password:$("#register-password").value})});localStorage.setItem(tokenKey,data.token);message(status,"Аккаунт создан. Перенаправляем…","success");setTimeout(()=>location.href="/account",350)}catch(err){message(status,err.message,"error")}});
 }
 async function accountInit(){
@@ -135,7 +135,7 @@ async function accountInit(){
   $("#profile-avatar").textContent=(user.name||"W").trim().charAt(0).toLocaleUpperCase("ru-RU");
   $("#profile-booking-count").textContent=items.length;
   $("#profile-member-since").textContent="Активен";
-  if(user.is_admin){const actions=$(".profile-actions");if(actions&&!$("#admin-panel-link"))actions.insertAdjacentHTML("beforeend",'<a class="button button-outline" id="admin-panel-link" href="/admin">Админ-панель БД →</a>');}
+  if(user.is_admin){const actions=$(".profile-actions");if(actions&&!$("#admin-panel-link"))actions.insertAdjacentHTML("beforeend",'<a class="button button-outline" id="admin-panel-link" href="/admin">База данных →</a>');}
   if(!items.length){host.innerHTML='<div class="account-empty"><span class="account-empty-icon">✈</span><h3>Пока нет бронирований</h3><p>Самое время запланировать первую поездку.</p><a class="button button-primary" href="/catalog">Посмотреть билеты →</a></div>';}
   else host.innerHTML=items.map(b=>`<article class="ticket-history"><strong>${esc(b.origin)} → ${esc(b.destination)}</strong><small>${esc(b.date)} · отправление ${esc(b.depart)} · место ${esc(b.seat)}</small><small>${esc(b.transport)} · ${esc(b.carrier)} · бронирование №${b.booking_id}</small><div class="history-price">${money(b.price)}</div></article>`).join("");
  }catch(e){if(e.message.includes("Войдите")||e.message.includes("Сессия")){localStorage.removeItem(tokenKey);location.replace("/auth");return;}host.innerHTML=`<p class="empty-state">${esc(e.message)}</p>`;message($("#account-status"),e.message,"error");}
@@ -150,7 +150,18 @@ async function adminInit(){
   const data=await api("/api/admin/overview");
   const stats=Object.entries(data.stats).map(([k,v])=>`<div class="admin-stat"><strong>${v}</strong><span>${({users:"Пользователи",bookings:"Бронирования",messages:"Сообщения",trips:"Маршруты"})[k]||k}</span></div>`).join("");
   const table=(headers,rows)=>`<div class="admin-table-wrap"><table class="admin-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows||`<tr><td colspan="${headers.length}">Нет записей</td></tr>`}</tbody></table></div>`;
-  root.innerHTML=`<div class="admin-stats">${stats}</div><section class="content-card admin-section"><h2>Пользователи</h2>${table(["ID","Имя","Почта","Создан","Роль"],data.users.map(u=>`<tr><td>${u.id}</td><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc((u.created_at||"").slice(0,10))}</td><td>${u.is_admin?"Администратор":"Пользователь"}</td></tr>`).join(""))}</section><section class="content-card admin-section"><h2>Бронирования</h2>${table(["№","Пользователь","Маршрут","Дата","Место","Цена"],data.bookings.map(b=>`<tr><td>${b.booking_id}</td><td>${esc(b.email)}</td><td>${esc(b.origin)} → ${esc(b.destination)}</td><td>${esc(b.date)}</td><td>${esc(b.seat)}</td><td>${money(b.price)}</td></tr>`).join(""))}</section><section class="content-card admin-section"><h2>Сообщения с формы обратной связи</h2>${table(["ID","Имя","Почта","Сообщение","Дата"],data.messages.map(m=>`<tr><td>${m.id}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.message)}</td><td>${esc((m.created_at||"").slice(0,10))}</td></tr>`).join(""))}</section>`;
+  const panels={
+   users: `<h2>Пользователи</h2>${table(["ID","Имя","Почта","Создан","Роль"],data.users.map(u=>`<tr><td>${u.id}</td><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc((u.created_at||"").slice(0,10))}</td><td>${u.is_admin?"Администратор":"Пользователь"}</td></tr>`).join(""))}`,
+   bookings: `<h2>Бронирования</h2>${table(["№","Пользователь","Маршрут","Дата","Место","Цена"],data.bookings.map(b=>`<tr><td>${b.booking_id}</td><td>${esc(b.email)}</td><td>${esc(b.origin)} → ${esc(b.destination)}</td><td>${esc(b.date)}</td><td>${esc(b.seat)}</td><td>${money(b.price)}</td></tr>`).join(""))}`,
+   messages: `<h2>Сообщения</h2>${table(["ID","Имя","Почта","Сообщение","Дата"],data.messages.map(m=>`<tr><td>${m.id}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.message)}</td><td>${esc((m.created_at||"").slice(0,10))}</td></tr>`).join(""))}`,
+   db: `<h2>База данных</h2><p class="muted admin-db-note">Таблицы SQLite и содержимое маршрутов. Хеши паролей и токены сессий не показываются.</p><div class="admin-db-tables">${(data.tables||[]).map(t=>`<div class="admin-db-chip"><strong>${esc(t.name)}</strong><span>${t.rows} записей</span></div>`).join("")}</div><h3 class="admin-subheading">Маршруты (trips)</h3>${table(["ID","Откуда","Куда","Транспорт","Перевозчик","Дата","Время","Цена"],(data.trips||[]).map(t=>`<tr><td>${t.id}</td><td>${esc(t.origin)} (${esc(t.origin_code)})</td><td>${esc(t.destination)} (${esc(t.destination_code)})</td><td>${esc(t.transport)}</td><td>${esc(t.carrier)}</td><td>${esc(t.date)}</td><td>${esc(t.depart)}–${esc(t.arrive)}</td><td>${money(t.price)}</td></tr>`).join(""))}`
+  };
+  root.innerHTML=`<div class="admin-stats">${stats}</div><div class="admin-tabs" role="tablist" aria-label="Разделы панели">${[["users","Пользователи"],["bookings","Бронирования"],["messages","Сообщения"],["db","БД"]].map(([id,label],i)=>`<button type="button" class="admin-tab${i===0?" is-active":""}" role="tab" aria-selected="${i===0}" data-admin-tab="${id}">${label}</button>`).join("")}</div><section class="content-card admin-section" id="admin-panel">${panels.users}</section>`;
+  const panel=$("#admin-panel");
+  $$(".admin-tab",root).forEach(tab=>tab.addEventListener("click",()=>{
+   $$(".admin-tab",root).forEach(t=>{const on=t===tab;t.classList.toggle("is-active",on);t.setAttribute("aria-selected",String(on));});
+   panel.innerHTML=panels[tab.dataset.adminTab]||"";
+  }));
  }catch(e){if(e.message.includes("Войдите")||e.message.includes("Сессия")){localStorage.removeItem(tokenKey);location.replace("/auth");return;}root.innerHTML=`<section class="content-card"><h2>Не удалось загрузить базу</h2><p>${esc(e.message)}</p></section>`;}
 }
 

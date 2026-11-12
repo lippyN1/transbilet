@@ -52,7 +52,7 @@ def test_auth_navigation_preserves_existing_session():
     js = (Path(__file__).resolve().parents[1] / "static" / "app.js").read_text(encoding="utf-8")
     assert 'const tokenKey = "waygo_token"' in js
     assert 'link.href="/account"' in js
-    assert 'api("/api/auth/me").then(()=>{location.replace("/account")})' in js
+    assert 'api("/api/auth/me").then(me=>{location.replace(me.user?.is_admin?"/admin":"/account")})' in js
 
 def test_pages_and_health():
     with TestClient(waygo.app) as client:
@@ -110,7 +110,24 @@ def test_admin_database_is_protected_and_available_to_admin():
         assert client.get("/api/admin/overview", headers=headers).status_code == 200
         data = client.get("/api/admin/overview", headers=headers).json()
         assert {"users", "bookings", "messages", "trips"} <= set(data["stats"])
+        assert "trips" in data and "tables" in data
+        assert any(t["name"] == "users" for t in data["tables"])
         assert "password_hash" not in str(data)
+
+
+def test_demo_admin_account_can_login():
+    with TestClient(waygo.app) as client:
+        login = client.post("/api/auth/login", json={
+            "email": "admin@waygo.app",
+            "password": "AdminWayGo123",
+        })
+        assert login.status_code == 200, login.text
+        body = login.json()
+        assert body["user"]["is_admin"] is True
+        headers = {"Authorization": f"Bearer {body['token']}"}
+        overview = client.get("/api/admin/overview", headers=headers)
+        assert overview.status_code == 200
+        assert 'id="admin-root"' in client.get("/admin").text
 
 
 def test_weather_and_map_api_validate_city(monkeypatch):
