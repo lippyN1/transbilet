@@ -152,7 +152,7 @@ body>main{flex:1 0 auto}
 @media(max-width:800px){.site-header{height:74px}.header-inner{display:flex;justify-content:space-between;gap:12px}.main-nav{justify-content:flex-start;white-space:normal}.contacts-layout{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:22px}}
 @media(max-width:720px){.container,.header-inner,.footer-inner{width:min(100% - 32px,560px)}.header-inner{display:flex;gap:12px}.main-nav{white-space:normal}.header-actions{margin-left:auto}.contacts-layout{grid-template-columns:minmax(0,1fr);gap:24px;padding-top:25px;padding-bottom:50px}.contact-form-card{height:auto}.contact-info{height:auto}.contact-card{min-height:82px}.brand-mark{flex-basis:32px;width:32px;height:32px}.brand-mark svg{width:22px;height:22px}}
 @media(max-width:390px){.container,.header-inner,.footer-inner{width:calc(100% - 24px)}.header-inner{gap:8px}.brand{gap:6px}.header-actions{gap:6px}}
-.brand-footer{--logo-cutout:var(--purple)}
+.brand-footer{--logo-cutout:#fff}
 
 /* Единый логотип WayGo на всех страницах */
 .site-header .brand,
@@ -172,20 +172,28 @@ body>main{flex:1 0 auto}
 
 .site-header .brand-mark,
 .site-footer .brand-mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-grid;
+    place-items: center;
     flex: 0 0 36px;
     width: 36px;
     height: 36px;
-    color: #6758e8;
+    border-radius: 12px;
+    background: var(--purple);
+    color: #fff;
+    box-shadow: 0 7px 15px #6558e833;
 }
 
 .site-header .brand-mark svg,
 .site-footer .brand-mark svg {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: 22px;
+    height: 22px;
+}
+
+.site-footer .brand-mark {
+    background: #fff;
+    color: var(--purple);
+    box-shadow: none;
 }
 
 .site-header .brand-accent,
@@ -303,6 +311,29 @@ body>main{flex:1 0 auto}
 .admin-db-chip span{font-size:.76rem;color:#6c7890}
 .admin-subheading{font:750 1rem Manrope,sans-serif;margin:8px 0 14px;color:#202944}
 @media(max-width:760px){.admin-tabs{gap:6px}.admin-tab{flex:1 1 calc(50% - 6px);font-size:.82rem}.detail-bottom .button{width:100%}}
+
+/* Фильтры каталога: select той же высоты, что и «Любой город» */
+.filter-panel .text-input,
+.filter-panel select.text-input{
+  box-sizing:border-box;
+  width:100%;
+  min-height:46px;
+  height:46px;
+  padding:0 13px;
+  font-size:.88rem;
+  line-height:1.2;
+  border-radius:11px;
+}
+.filter-panel select.text-input{
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23858da2' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  background-color:#fff;
+  padding-right:36px;
+  cursor:pointer;
+}
 
 /* Только цена + «за пассажира» + кнопка «Выбрать» — ровная правая колонка */
 .trip-price{
